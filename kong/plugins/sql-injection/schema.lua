@@ -1,7 +1,7 @@
 local typedefs = require "kong.db.schema.typedefs"
 
 
-local PLUGIN_NAME = "sql-injection"
+local PLUGIN_NAME = "threat-protection"
 
 
 local schema = {

@@ -1,11 +1,11 @@
-local plugin_name = "sql-injection"
-local package_name = "kong-plugin-" .. plugin_name
+local plugin_name = "threat-protection"
+local package_name = plugin_name
 local package_version = "0.1.0"
 local rockspec_revision = "1"
 
 local github_account_name = "msangameshwar"
-local github_repo_name = "kong-plugin-sql-injection"
-local git_checkout = dev
+local github_repo_name = "kong-plugin-threat-protection"
+local git_checkout = "dev"
 
 
 package = package_name
@@ -19,7 +19,7 @@ source = {
 
 description = {
   summary = "Kong is a scalable and customizable API Management Layer built on top of Nginx.",
-  homepage = "https://"..github_account_name..".github.io/"..github_repo_name,
+  homepage = "https://github.com/msangameshwar/"..github_repo_name,
   license = "Apache 2.0",
 }
 
