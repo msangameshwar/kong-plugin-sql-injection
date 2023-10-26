@@ -92,45 +92,49 @@ function plugin:access(plugin_conf)
     injection(query_param_list)
   end
 
-  if string.match(content_type, "multipart/form%-data") then
-    local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all()
-    injection(request_body)
-  end
-
-  if string.match(content_type, "application/x%-www%-form%-urlencoded") then
-    local request_body = {}
-    local flag = false
-    local temp;
-    for pair in string.gmatch(initialRequest, "([^&]+)") do
-      for res in string.gmatch(pair, "([^=]+)") do
-        if flag then
-          request_body[urlencode.decode_url(temp)] = urlencode.decode_url(res)
-          flag = false
-        else
-          temp = res
-          flag = true
-        end
-      end
-    end
-    injection(request_body)
-  end
-
   local uripath = kong.request.get_path()
 
-  regex_threat_protection({ uri_path = uripath })
-
-  if string.match(content_type, "application/json") then
-    local initialRequest = kong.request.get_raw_body()
-    initialRequest = json.decode(initialRequest)
-    regex_threat_protection(initialRequest)
+  if uripath then
+    regex_threat_protection({ uri_path = uripath })
   end
 
-  if string.match(content_type, "application/xml") then
-    local initialRequest = kong.request.get_raw_body()
-    local parser = xml2lua.parser(handler)
-    parser:parse(initialRequest)
-    initialRequest = handler.root
-    regex_threat_protection(initialRequest)
+  if content_type then
+    if string.match(content_type, "multipart/form%-data") then
+      local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all()
+      injection(request_body)
+    end
+
+    if string.match(content_type, "application/x%-www%-form%-urlencoded") then
+      local request_body = {}
+      local flag = false
+      local temp;
+      for pair in string.gmatch(initialRequest, "([^&]+)") do
+        for res in string.gmatch(pair, "([^=]+)") do
+          if flag then
+            request_body[urlencode.decode_url(temp)] = urlencode.decode_url(res)
+            flag = false
+          else
+            temp = res
+            flag = true
+          end
+        end
+      end
+      injection(request_body)
+    end
+
+    if string.match(content_type, "application/json") then
+      local initialRequest = kong.request.get_raw_body()
+      initialRequest = json.decode(initialRequest)
+      regex_threat_protection(initialRequest)
+    end
+
+    if string.match(content_type, "application/xml") then
+      local initialRequest = kong.request.get_raw_body()
+      local parser = xml2lua.parser(handler)
+      parser:parse(initialRequest)
+      initialRequest = handler.root
+      regex_threat_protection(initialRequest)
+    end
   end
 end
 
