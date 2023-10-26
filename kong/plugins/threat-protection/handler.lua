@@ -20,7 +20,7 @@ function plugin:access(plugin_conf)
     "[%s]*(include)", "[%s]*(exec)", "[%s]*(echo)", "[%s]*(config)", "[%s]*(printenv)", "[%s]*(/?ancestor(-or-self)?)",
     "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))", "[%s]* or ", " or$", "^or " }
 
-  function injection(parameter_list)
+  local function injection(parameter_list)
     for key, value in pairs(parameter_list) do
       for pattern = 1, #code_pattern_list do
         if string.match(string.lower(tostring(value)), code_pattern_list[pattern]) then
@@ -57,7 +57,7 @@ function plugin:access(plugin_conf)
     "[%s]*(echo)[%s]+", "[%s]*(config)[%s]+", "[%s]*(printenv)[%s]+", "[%s]*(/?ancestor(-or-self)?)",
     "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))" }
 
-  function regex_threat_protection(request_body)
+  local function regex_threat_protection(request_body)
     for key, value in pairs(request_body) do
       if type(value) == "table" then
         regex_threat_protection(value)
