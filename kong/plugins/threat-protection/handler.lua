@@ -84,8 +84,13 @@ function plugin:access(plugin_conf)
   local content_type = kong.request.get_header("content-type")
 
   -- checking injection in the query parameter
-  injection(query_param_list)
-  injection(header_list)
+  if header_list then
+    injection(header_list)
+  end
+
+  if query_param_list then
+    injection(query_param_list)
+  end
 
   if string.match(content_type, "multipart/form%-data") then
     local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all()
