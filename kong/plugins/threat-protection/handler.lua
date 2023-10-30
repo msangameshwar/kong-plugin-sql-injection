@@ -12,68 +12,60 @@ local plugin = {
 
 -- -- runs in the 'access_by_lua_block'
 function plugin:access(plugin_conf)
-  local initialRequest = kong.request.get_raw_body()
-  local sql_pattern_list = { "[%s]*(delete)", "[%s]*(exec)", "[%s]*(drop)[%s]*[table]?", "[%s]*(insert)",
-    "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or " }
+local initialRequest = kong.request.get_raw_body()
+local sql_pattern_list = {"[%s]*(delete)", "[%s]*(exec)", "[%s]*(drop)[%s]*[table]?", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or "}
 
-  local code_pattern_list = { ".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)",
-    "[%s]*(include)", "[%s]*(exec)", "[%s]*(echo)", "[%s]*(config)", "[%s]*(printenv)", "[%s]*(/?ancestor(-or-self)?)",
-    "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))", "[%s]* or ", " or$", "^or " }
+local code_pattern_list = {".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)", "[%s]*(include)", "[%s]*(exec)", "[%s]*(echo)", "[%s]*(config)", "[%s]*(printenv)", "[%s]*(/?ancestor(-or-self)?)", "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))", "[%s]* or ", " or$", "^or "}
 
-  local function injection(parameter_list)
-    for key, value in pairs(parameter_list) do
-      for pattern = 1, #code_pattern_list do
-        if string.match(string.lower(tostring(value)), code_pattern_list[pattern]) then
-          local error_response = {
-            success = "false",
-            status = "failed",
-            errorCode = "8004",
-            message = "Code Injection Detected"
-          }
-          return kong.response.exit(400, error_response, {
-            ["Content-Type"] = "application/json"
-          })
+function injection(parameter_list)
+    for key,value in pairs(parameter_list) do
+        for pattern = 1, #code_pattern_list do
+            if string.match(string.lower(tostring(value)), code_pattern_list[pattern]) then
+                local error_response = {
+                    success = "false",
+                    status = "failed",
+                    errorCode = "8004",
+                    message = "Code Injection Detected"}
+                return kong.response.exit(400, error_response, {
+                    ["Content-Type"] = "application/json"
+                })
+            end
         end
+        for pattern = 1, #sql_pattern_list do
+            if string.match(string.lower(tostring(value)), sql_pattern_list[pattern]) then
+                local error_response = { 
+                            success = "false",
+                            status = "failed",
+                            errorCode = "8005",
+                            message = "SQL Attack Detected"
+                        }
+                return kong.response.exit(400, error_response, {
+                    ["Content-Type"] = "application/json"
+                })
+                end
+           end
       end
-      for pattern = 1, #sql_pattern_list do
-        if string.match(string.lower(tostring(value)), sql_pattern_list[pattern]) then
-          local error_response = {
-            success = "false",
-            status = "failed",
-            errorCode = "8005",
-            message = "SQL Attack Detected"
-          }
-          return kong.response.exit(400, error_response, {
-            ["Content-Type"] = "application/json"
-          })
-        end
-      end
-    end
   end
 
-  local regex_pattern_list = { ".*waitfor delay '[0-9]+:[0-9]+:%d%d%d'.*", "[%s]*(delete)", "[%s]*(exec)[%s]*",
-    "[%s]*(drop)[%s]*table", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or ",
-    ".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)", "[%s]*(include)[%s]+",
-    "[%s]*(echo)[%s]+", "[%s]*(config)[%s]+", "[%s]*(printenv)[%s]+", "[%s]*(/?ancestor(-or-self)?)",
-    "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))" }
+  local regex_pattern_list = { ".*waitfor delay '[0-9]+:[0-9]+:%d%d%d'.*", "[%s]*(delete)", "[%s]*(exec)[%s]*", "[%s]*(drop)[%s]*table", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or ", ".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)", "[%s]*(include)[%s]+", "[%s]*(echo)[%s]+", "[%s]*(config)[%s]+", "[%s]*(printenv)[%s]+", "[%s]*(/?ancestor(-or-self)?)", "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))"}
 
-  local function regex_threat_protection(request_body)
-    for key, value in pairs(request_body) do
-      if type(value) == "table" then
+  function regex_threat_protection(request_body)
+    for key,value in pairs(request_body) do
+      if type(value) == "table"  then
         regex_threat_protection(value)
       else
         for pattern = 1, #regex_pattern_list do
-          if string.match(string.lower(tostring(value)), regex_pattern_list[pattern]) then
-            local error_response = {
-              success = "false",
-              status = "failed",
-              errorCode = "8006",
-              message = "Code Injection/SQL Attack Detected",
-            }
-            return kong.response.exit(400, error_response, {
-              ["Content-Type"] = "application/json"
-            })
-          end
+            if string.match(string.lower(tostring(value)), regex_pattern_list[pattern]) then
+                local error_response = {
+                  success = "false",
+                  status = "failed",
+                  errorCode = "8006",
+                  message = "Code Injection/SQL Attack Detected",
+                }
+              return kong.response.exit(400, error_response, {
+                  ["Content-Type"] = "application/json"
+              })
+            end
         end
       end
     end
@@ -84,58 +76,50 @@ function plugin:access(plugin_conf)
   local content_type = kong.request.get_header("content-type")
 
   -- checking injection in the query parameter
-  if header_list then
-    injection(header_list)
-  end
+  injection(query_param_list)
+  injection(header_list)
 
-  if query_param_list then
-    injection(query_param_list)
-  end
-
-  local uripath = kong.request.get_path()
-
-  if uripath then
-    regex_threat_protection({ uri_path = uripath })
-  end
-
-  if content_type then
-    if string.match(content_type, "multipart/form%-data") then
-      local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all()
+  if string.match(content_type, "multipart/form%-data") then
+      local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all() 
       injection(request_body)
-    end
+  end
 
-    if string.match(content_type, "application/x%-www%-form%-urlencoded") then
+  if string.match(content_type, "application/x%-www%-form%-urlencoded") then
       local request_body = {}
       local flag = false
       local temp;
       for pair in string.gmatch(initialRequest, "([^&]+)") do
-        for res in string.gmatch(pair, "([^=]+)") do
-          if flag then
-            request_body[urlencode.decode_url(temp)] = urlencode.decode_url(res)
-            flag = false
-          else
-            temp = res
-            flag = true
+          for res in string.gmatch(pair, "([^=]+)") do
+              if flag then
+              request_body[urlencode.decode_url(temp)] = urlencode.decode_url(res)
+              flag = false
+              else
+                  temp = res
+                  flag = true
+              end
           end
-        end
       end
       injection(request_body)
-    end
-
-    if string.match(content_type, "application/json") then
-      local initialRequest = kong.request.get_raw_body()
-      initialRequest = json.decode(initialRequest)
-      regex_threat_protection(initialRequest)
-    end
-
-    if string.match(content_type, "application/xml") then
-      local initialRequest = kong.request.get_raw_body()
-      local parser = xml2lua.parser(handler)
-      parser:parse(initialRequest)
-      initialRequest = handler.root
-      regex_threat_protection(initialRequest)
-    end
   end
+
+  local uripath = kong.request.get_path()
+
+  regex_threat_protection({uri_path = uripath })
+
+  if string.match(content_type, "application/json") then
+    local initialRequest = kong.request.get_raw_body()
+    initialRequest = json.decode(initialRequest)
+    regex_threat_protection(initialRequest)
+  end
+
+  if string.match(content_type, "application/xml") then
+        local initialRequest = kong.request.get_raw_body()
+        local parser = xml2lua.parser(handler)
+        parser:parse(initialRequest)
+        initialRequest = handler.root    
+        regex_threat_protection(initialRequest)
+  end
+
 end
 
 -- return our plugin object
