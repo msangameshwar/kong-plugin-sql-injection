@@ -66,7 +66,7 @@ function injection(parameter_list)
   injection(header_list)
 
   if string.match(content_type, "multipart/form%-data") then
-      local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all() 
+    local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all()
       injection(request_body)
   end
 
@@ -94,15 +94,23 @@ function injection(parameter_list)
 
   if string.match(content_type, "application/json") then
     local initialRequest = kong.request.get_raw_body()
-    initialRequest = json.decode(initialRequest)
-    regex_threat_protection(initialRequest)
+    --initialRequest = json.decode(initialRequest)
+    local status, json = pcall(cjson.decode, body)
+    if not status then
+      local error_message = "threat protection error"
+
+      return kong.response.exit(400, error_message, {
+        ["Content-Type"] = "application/json"
+      })
+    end
+    regex_threat_protection(json)
   end
 
   if string.match(content_type, "application/xml") then
         local initialRequest = kong.request.get_raw_body()
         local parser = xml2lua.parser(handler)
         parser:parse(initialRequest)
-        initialRequest = handler.root    
+    initialRequest = handler.root
         regex_threat_protection(initialRequest)
   end
 
