@@ -95,7 +95,7 @@ function injection(parameter_list)
   if string.match(content_type, "application/json") then
     local initialRequest = kong.request.get_raw_body()
     --initialRequest = json.decode(initialRequest)
-    local status, json = pcall(cjson.decode, body)
+    local status, json = pcall(json.decode, initialRequest)
     if not status then
       local error_message = "threat protection error"
 
