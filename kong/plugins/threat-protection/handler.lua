@@ -12,13 +12,13 @@ local plugin = {
 
 -- -- runs in the 'access_by_lua_block'
 function plugin:access(plugin_conf)
-  function json_threat_protection()
+  local function json_threat_protection()
     local initialRequest = kong.request.get_raw_body()
     local sql_pattern_list = {"[%s]*(delete)", "[%s]*(exec)", "[%s]*(drop)[%s]*[table]?", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or "}
 
     local code_pattern_list = {".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)", "[%s]*(include)", "[%s]*(exec)", "[%s]*(echo)", "[%s]*(config)", "[%s]*(printenv)", "[%s]*(/?ancestor(-or-self)?)", "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))", "[%s]* or ", " or$", "^or "}
 
-    function injection(parameter_list)
+    local function injection(parameter_list)
         for key,value in pairs(parameter_list) do
             for pattern = 1, #code_pattern_list do
                 if string.match(string.lower(tostring(value)), code_pattern_list[pattern]) then
@@ -41,7 +41,7 @@ function plugin:access(plugin_conf)
 
       local regex_pattern_list = { ".*waitfor delay '[0-9]+:[0-9]+:%d%d%d'.*", "[%s]*(delete)", "[%s]*(exec)[%s]*", "[%s]*(drop)[%s]*table", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or ", ".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)", "[%s]*(include)[%s]+", "[%s]*(echo)[%s]+", "[%s]*(config)[%s]+", "[%s]*(printenv)[%s]+", "[%s]*(/?ancestor(-or-self)?)", "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))"}
 
-      function regex_threat_protection(request_body)
+      local function regex_threat_protection(request_body)
         for key,value in pairs(request_body) do
           if type(value) == "table"  then
             regex_threat_protection(value)
@@ -108,7 +108,7 @@ function plugin:access(plugin_conf)
       end
     end
 
-    function error_handler( err )
+    local function error_handler( err )
         kong.log.set_serialize_value("request.JSON-Threat-Protection", err)
         local error_response = {
             message = "An unexpected error occurred",
@@ -118,7 +118,7 @@ function plugin:access(plugin_conf)
             })
     end
 
-    status = xpcall( json_threat_protection, error_handler )
+    local status = xpcall( json_threat_protection, error_handler )
 end
 
 -- return our plugin object
