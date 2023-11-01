@@ -67,7 +67,7 @@ function plugin:access(plugin_conf)
       injection(header_list)
 
       if string.match(content_type, "multipart/form%-data") then
-          local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all() 
+          local request_body = multipart(kong.request.get_raw_body(), kong.request.get_header("Content-Type")):get_all()
           injection(request_body)
       end
 
@@ -103,7 +103,7 @@ function plugin:access(plugin_conf)
             local initialRequest = kong.request.get_raw_body()
             local parser = xml2lua.parser(handler)
             parser:parse(initialRequest)
-            initialRequest = handler.root    
+            initialRequest = handler.root
             regex_threat_protection(initialRequest)
       end
     end
@@ -113,11 +113,11 @@ function plugin:access(plugin_conf)
         local error_response = {
             message = "An unexpected error occurred",
             }
-            return kong.response.exit(400, error_response, {
+            return kong.response.exit(500, error_response, {
                 ["Content-Type"] = "application/json"
             })
     end
-            
+
     status = xpcall( json_threat_protection, error_handler )
 end
 
