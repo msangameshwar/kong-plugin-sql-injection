@@ -21,25 +21,16 @@ function injection(parameter_list)
     for key,value in pairs(parameter_list) do
         for pattern = 1, #code_pattern_list do
             if string.match(string.lower(tostring(value)), code_pattern_list[pattern]) then
-                local error_response = {
-                    success = "false",
-                    status = "failed",
-                    errorCode = "8004",
-                    message = "Code Injection Detected"}
-                return kong.response.exit(400, error_response, {
+                local error_message = "CodeInjectionDetected"
+                return kong.response.error(400, error_message, {
                     ["Content-Type"] = "application/json"
                 })
             end
         end
         for pattern = 1, #sql_pattern_list do
             if string.match(string.lower(tostring(value)), sql_pattern_list[pattern]) then
-                local error_response = { 
-                            success = "false",
-                            status = "failed",
-                            errorCode = "8005",
-                            message = "SQL Attack Detected"
-                        }
-                return kong.response.exit(400, error_response, {
+                local error_message = "SQLAttackDetected"
+                return kong.response.error(400, error_message, {
                     ["Content-Type"] = "application/json"
                 })
                 end
@@ -56,13 +47,8 @@ function injection(parameter_list)
       else
         for pattern = 1, #regex_pattern_list do
             if string.match(string.lower(tostring(value)), regex_pattern_list[pattern]) then
-                local error_response = {
-                  success = "false",
-                  status = "failed",
-                  errorCode = "8006",
-                  message = "Code Injection/SQL Attack Detected",
-                }
-              return kong.response.exit(400, error_response, {
+                local error_message = "RegexAttackDetected"
+              return kong.response.error(400, error_message, {
                   ["Content-Type"] = "application/json"
               })
             end
