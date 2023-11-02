@@ -94,13 +94,13 @@ function plugin:access(plugin_conf)
       regex_threat_protection({uri_path = uripath })
 
       if string.match(content_type, "application/json") then
-        local initialRequest = kong.request.get_raw_body()
+        -- initialRequest = kong.request.get_raw_body()
         initialRequest = json.decode(initialRequest)
         regex_threat_protection(initialRequest)
       end
 
       if string.match(content_type, "application/xml") then
-            local initialRequest = kong.request.get_raw_body()
+            -- local initialRequest = kong.request.get_raw_body()
             local parser = xml2lua.parser(handler)
             parser:parse(initialRequest)
             initialRequest = handler.root
