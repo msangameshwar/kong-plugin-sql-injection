@@ -14,6 +14,8 @@ local plugin = {
 function plugin:access(plugin_conf)
   local function json_threat_protection()
     local initialRequest = kong.request.get_raw_body()
+    json.encode_max_depth(1000)
+
     local sql_pattern_list = {"[%s]*(delete)", "[%s]*(exec)", "[%s]*(drop)[%s]*[table]?", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or "}
 
     local code_pattern_list = {".*exception in thread.*", "[%s]*(<%s*script%f[^>]*>[^<]+<%s/*%s*script%s*>)", "[%s]*(include)", "[%s]*(exec)", "[%s]*(echo)", "[%s]*(config)", "[%s]*(printenv)", "[%s]*(/?ancestor(-or-self)?)", "[%s]*(/?descendant(-or-self)?)", "[%s]*(/?following(-sibling))", "[%s]* or ", " or$", "^or "}
@@ -106,6 +108,7 @@ function plugin:access(plugin_conf)
             initialRequest = handler.root
             regex_threat_protection(initialRequest)
       end
+
     end
 
     local function error_handler( err )
