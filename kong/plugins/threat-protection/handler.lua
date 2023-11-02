@@ -109,9 +109,9 @@ function plugin:access(plugin_conf)
     end
 
     local function error_handler( err )
-        kong.log.set_serialize_value("request.JSON-Threat-Protection", err)
+        kong.log.set_serialize_value("request.Threat-Protection", err)
         local error_response = {
-            message = "An unexpected error occurred",
+            message = "An unexpected error occurred in threat Protection",
             }
             return kong.response.exit(500, error_response, {
                 ["Content-Type"] = "application/json"
