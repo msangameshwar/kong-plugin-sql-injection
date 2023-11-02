@@ -14,7 +14,7 @@ local plugin = {
 function plugin:access(plugin_conf)
   local function json_threat_protection()
     local initialRequest = kong.request.get_raw_body()
-    json.decode_max_depth(1000)
+    local max_depth =  json.decode_max_depth(1000)
 
     local sql_pattern_list = {"[%s]*(delete)", "[%s]*(exec)", "[%s]*(drop)[%s]*[table]?", "[%s]*(insert)", "[%s]*(shutdown)", "[%s]*(update)", "[%s]* or ", " or$", "^or "}
 
