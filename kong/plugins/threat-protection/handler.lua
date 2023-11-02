@@ -96,7 +96,7 @@ function plugin:access(plugin_conf)
       if string.match(content_type, "application/json") then
         local initialRequest = kong.request.get_raw_body()
         initialRequest = json.decode(initialRequest)
-        --regex_threat_protection(initialRequest)
+        regex_threat_protection(initialRequest)
       end
 
       if string.match(content_type, "application/xml") then
